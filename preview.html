@@ -1,0 +1,1772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdStudio — AI Ad Creation</title>
+<style>
+  @import url('data:text/css,');
+
+  :root {
+    --bg-base: #0A0A0F;
+    --bg-surface: #111118;
+    --bg-elevated: #1A1A24;
+    --accent-cyan: #00D4FF;
+    --accent-amber: #F59E0B;
+    --border: #2A2A3A;
+    --border-bright: #3A3A50;
+    --text-primary: #F0F0FF;
+    --text-secondary: #8888AA;
+    --text-muted: #44445A;
+    --glow-cyan: 0 0 20px rgba(0,212,255,0.25);
+    --glow-cyan-lg: 0 0 40px rgba(0,212,255,0.35);
+    --radius: 12px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent-cyan); }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    height: 64px;
+    background: rgba(17,17,24,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+  }
+  .nav-inner {
+    max-width: 1200px; margin: 0 auto; padding: 0 24px;
+    width: 100%;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none; cursor: pointer;
+  }
+  .logo-icon {
+    width: 28px; height: 28px;
+    background: var(--accent-cyan);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--glow-cyan);
+    font-size: 14px; font-weight: 900; color: var(--bg-base);
+  }
+  .logo-text { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+  .logo-text span { color: var(--accent-cyan); }
+  .nav-links { display: flex; gap: 4px; }
+  .nav-link {
+    padding: 6px 14px; border-radius: 8px;
+    font-size: 14px; font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer; border: none; background: none;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .nav-link:hover { color: var(--text-primary); background: var(--bg-elevated); }
+  .nav-link.active { color: var(--accent-cyan); }
+  .nav-link.active::after {
+    content: '';
+    position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--accent-cyan);
+  }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 20px; border-radius: 12px;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; border: none; transition: all 0.15s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary {
+    background: var(--accent-cyan); color: var(--bg-base);
+    box-shadow: var(--glow-cyan);
+  }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-secondary {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-bright);
+    color: var(--text-primary);
+  }
+  .btn-secondary:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+  .btn-ghost { background: none; color: var(--text-secondary); }
+  .btn-ghost:hover { color: var(--text-primary); background: var(--bg-elevated); }
+  .btn-sm { padding: 7px 14px; font-size: 13px; border-radius: 10px; }
+  .btn-lg { padding: 14px 28px; font-size: 16px; border-radius: 14px; }
+
+  /* PAGES */
+  .page { display: none; padding-top: 64px; min-height: 100vh; }
+  .page.active { display: block; }
+
+  /* LANDING */
+  .hero {
+    min-height: calc(100vh - 64px);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 40px 24px;
+    position: relative; overflow: hidden;
+  }
+  .hero-glow {
+    position: absolute;
+    top: 40%; left: 50%; transform: translate(-50%, -50%);
+    width: 700px; height: 400px;
+    background: radial-gradient(ellipse, rgba(0,212,255,0.07) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 16px; border-radius: 999px;
+    border: 1px solid rgba(0,212,255,0.3);
+    background: rgba(0,212,255,0.05);
+    color: var(--accent-cyan);
+    font-size: 13px; font-weight: 500;
+    margin-bottom: 28px;
+  }
+  .hero h1 {
+    font-size: clamp(40px, 7vw, 72px);
+    font-weight: 900; line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-bottom: 20px;
+  }
+  .hero h1 .cyan { color: var(--accent-cyan); }
+  .hero p {
+    font-size: 18px; color: var(--text-secondary);
+    max-width: 560px; margin-bottom: 40px;
+    line-height: 1.7;
+  }
+  .url-form {
+    display: flex; gap: 12px; width: 100%; max-width: 600px;
+    flex-wrap: wrap; justify-content: center;
+  }
+  .url-input-wrap { flex: 1; min-width: 280px; position: relative; }
+  .url-input-wrap svg {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--text-muted); pointer-events: none;
+  }
+  .url-input {
+    width: 100%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 14px 14px 42px;
+    font-size: 15px; color: var(--text-primary);
+    outline: none; transition: all 0.15s;
+    font-family: inherit;
+  }
+  .url-input::placeholder { color: var(--text-muted); }
+  .url-input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(0,212,255,0.12); }
+  .hero-sub { color: var(--text-muted); font-size: 13px; margin-top: 16px; }
+
+  /* SHOWCASE */
+  .section { max-width: 1200px; margin: 0 auto; padding: 0 24px 80px; }
+  .section-label {
+    text-align: center;
+    color: var(--text-muted); font-size: 11px;
+    font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .section h2 {
+    text-align: center;
+    font-size: 32px; font-weight: 800; letter-spacing: -0.02em;
+    margin-bottom: 48px;
+  }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 768px) { .grid-3 { grid-template-columns: 1fr; } }
+  .card {
+    background: rgba(17,17,24,0.75);
+    border: 1px solid var(--border);
+    border-radius: 20px; overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+    cursor: pointer;
+  }
+  .card:hover { transform: translateY(-4px) scale(1.01); border-color: var(--border-bright); }
+  .card-canvas-wrap { background: rgba(0,0,0,0.2); padding: 16px; display: flex; justify-content: center; }
+  .card-info { padding: 14px 18px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .card-info h3 { font-size: 14px; font-weight: 600; }
+  .card-info p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .badge {
+    padding: 3px 10px; border-radius: 999px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+    border: 1px solid;
+  }
+  .badge-cyan { color: var(--accent-cyan); border-color: rgba(0,212,255,0.3); background: rgba(0,212,255,0.08); }
+  .badge-amber { color: var(--accent-amber); border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.08); }
+  .badge-purple { color: #A78BFA; border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.08); }
+  .badge-neutral { color: var(--text-secondary); border-color: var(--border-bright); background: var(--bg-elevated); }
+
+  /* FEATURES */
+  .features { background: var(--bg-surface); border-top: 1px solid var(--border); }
+  .features-inner { max-width: 1200px; margin: 0 auto; padding: 64px 24px; display: grid; grid-template-columns: repeat(3,1fr); gap: 32px; }
+  @media(max-width:768px){ .features-inner{ grid-template-columns:1fr; } }
+  .feature { display: flex; gap: 16px; }
+  .feature-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    font-size: 18px;
+  }
+  .feature h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .feature p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+
+  /* GENERATE PAGE */
+  .gen-wrap {
+    min-height: calc(100vh - 64px);
+    display: flex; align-items: center; justify-content: center; padding: 48px 24px;
+  }
+  .gen-inner { width: 100%; max-width: 900px; }
+
+  /* Input step */
+  .step-input { max-width: 600px; margin: 0 auto; text-align: center; }
+  .step-input h1 { font-size: 40px; font-weight: 900; letter-spacing: -0.02em; margin: 16px 0 12px; }
+  .step-input p { color: var(--text-secondary); margin-bottom: 32px; }
+  .input-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .input-row .url-input-wrap { flex: 1; min-width: 240px; }
+  .samples { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .sample-btn {
+    padding: 6px 14px; border-radius: 10px; font-size: 12px;
+    border: 1px solid var(--border); background: none; color: var(--text-muted);
+    cursor: pointer; transition: all 0.15s; font-family: inherit;
+  }
+  .sample-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+
+  /* Loading step */
+  .step-loading { max-width: 480px; margin: 0 auto; text-align: center; display: none; }
+  .spinner-wrap { position: relative; width: 72px; height: 72px; margin: 0 auto 32px; }
+  .spinner-bg { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--border); }
+  .spinner-ring {
+    position: absolute; inset: 0; border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: var(--accent-cyan);
+    animation: spin 1s linear infinite;
+  }
+  .spinner-dot {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  }
+  .spinner-dot::after {
+    content: '';
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent-cyan);
+    box-shadow: var(--glow-cyan);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+  .step-loading h2 { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+  .status-msg { height: 28px; overflow: hidden; margin-bottom: 28px; }
+  .status-msg p { color: var(--text-secondary); font-size: 15px; transition: opacity 0.3s; }
+  .progress-wrap { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
+  .progress-bar {
+    height: 100%; background: var(--accent-cyan); border-radius: 3px;
+    width: 0; transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 0 8px rgba(0,212,255,0.4);
+  }
+  .step-dots { display: flex; justify-content: center; gap: 6px; }
+  .step-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+  .step-dot.done { background: var(--accent-cyan); }
+
+  /* Preview step */
+  .step-preview { display: none; }
+  .preview-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px; gap: 16px; }
+  .preview-header .check { display: flex; align-items: center; gap: 8px; color: var(--accent-cyan); font-size: 13px; margin-bottom: 6px; }
+  .preview-header h2 { font-size: 32px; font-weight: 900; letter-spacing: -0.02em; }
+  .preview-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 28px; }
+  @media(max-width:768px){ .preview-grid{grid-template-columns:1fr;} }
+  .preview-canvas-wrap { background: rgba(17,17,24,0.75); border: 1px solid var(--border); border-radius: 20px; padding: 24px; display: flex; justify-content: center; }
+  .brand-panel { background: rgba(17,17,24,0.75); border: 1px solid var(--border); border-radius: 20px; padding: 20px; }
+  .brand-panel-label { font-size: 10px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 16px; }
+  .brand-row { margin-bottom: 14px; }
+  .brand-row label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+  .brand-row p { font-size: 14px; color: var(--text-primary); font-weight: 500; }
+  .brand-row p.sm { font-size: 13px; color: var(--text-secondary); font-weight: 400; }
+  .color-swatches { display: flex; gap: 8px; }
+  .swatch { display: flex; align-items: center; gap: 6px; }
+  .swatch-dot { width: 22px; height: 22px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); }
+  .swatch code { font-size: 11px; color: var(--text-muted); font-family: monospace; }
+  .brand-panel-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .brand-panel-url { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-muted); }
+  .brand-panel-url span { color: var(--text-secondary); word-break: break-all; }
+  .preview-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+
+  /* EDITOR PAGE */
+  .editor-wrap {
+    height: calc(100vh - 64px);
+    display: flex; flex-direction: column;
+  }
+  .editor-body {
+    flex: 1; overflow: hidden;
+    display: flex;
+  }
+  @media(max-width:768px){ .editor-body{flex-direction:column;} }
+  .editor-left {
+    flex: 1; background: var(--bg-base);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 24px; gap: 20px;
+  }
+  @media(max-width:768px){ .editor-left{ height:50vh; flex:none; } }
+  .editor-controls {
+    position: relative;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .play-btn {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-secondary);
+    transition: all 0.15s;
+  }
+  .play-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+  .timeline {
+    width: 200px; height: 4px; background: var(--border);
+    border-radius: 2px; overflow: hidden;
+  }
+  .timeline-progress {
+    height: 100%; background: var(--accent-cyan); border-radius: 2px;
+    width: 0; animation: none;
+  }
+  .timeline-progress.playing {
+    animation: timeline-anim 30s linear infinite;
+  }
+  @keyframes timeline-anim { from{width:0%} to{width:100%} }
+  .duration { font-size: 12px; color: var(--text-muted); }
+
+  .editor-right {
+    width: 380px; flex-shrink: 0;
+    background: var(--bg-surface);
+    border-left: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  @media(max-width:768px){ .editor-right{width:100%;flex:1;} }
+  .tabs-bar { display: flex; border-bottom: 1px solid var(--border); }
+  .tab-btn {
+    flex: 1; padding: 14px 8px;
+    font-size: 13px; font-weight: 500;
+    color: var(--text-secondary);
+    background: none; border: none; cursor: pointer;
+    transition: color 0.15s; font-family: inherit;
+    position: relative;
+  }
+  .tab-btn:hover { color: var(--text-primary); }
+  .tab-btn.active { color: var(--accent-cyan); }
+  .tab-btn.active::after {
+    content: ''; position: absolute;
+    bottom: 0; left: 0; right: 0; height: 2px;
+    background: var(--accent-cyan); border-radius: 2px 2px 0 0;
+    animation: slide-in 0.2s ease;
+  }
+  @keyframes slide-in { from{transform:scaleX(0)} to{transform:scaleX(1)} }
+  .tab-content { flex: 1; overflow-y: auto; padding: 20px; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Form fields */
+  .field { margin-bottom: 18px; }
+  .field label {
+    display: flex; justify-content: space-between;
+    font-size: 13px; color: var(--text-secondary); font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .field label .count { color: var(--text-muted); font-weight: 400; }
+  .field label .count.warn { color: var(--accent-amber); }
+  .field input, .field textarea {
+    width: 100%;
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 16px;
+    font-size: 14px; color: var(--text-primary);
+    font-family: inherit; outline: none; transition: all 0.15s;
+    resize: none;
+  }
+  .field input:focus, .field textarea:focus {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 0 3px rgba(0,212,255,0.12);
+  }
+  .field textarea { min-height: 80px; }
+
+  /* Palette grid */
+  .palette-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+  .palette-card {
+    padding: 12px; border-radius: 12px;
+    border: 1px solid var(--border); background: var(--bg-elevated);
+    cursor: pointer; transition: all 0.15s; text-align: left;
+  }
+  .palette-card:hover { border-color: var(--border-bright); }
+  .palette-card.selected { border-color: var(--accent-cyan); background: rgba(0,212,255,0.05); box-shadow: 0 0 0 1px var(--accent-cyan) inset; }
+  .palette-swatches { display: flex; gap: 4px; margin-bottom: 6px; }
+  .palette-swatch { width: 18px; height: 18px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.1); }
+  .palette-name { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+  .palette-card.selected .palette-name { color: var(--accent-cyan); }
+
+  /* Font options */
+  .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+  .option-card {
+    padding: 12px; border-radius: 12px;
+    border: 1px solid var(--border); background: var(--bg-elevated);
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .option-card:hover { border-color: var(--border-bright); }
+  .option-card.selected { border-color: var(--accent-cyan); background: rgba(0,212,255,0.05); color: var(--accent-cyan); }
+  .option-card .sample { font-size: 20px; font-weight: 800; }
+  .option-card .label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+  .option-card.selected .label { color: var(--accent-cyan); }
+
+  /* Format options */
+  .format-options { display: flex; gap: 8px; }
+  .format-card {
+    flex: 1; padding: 12px 8px; border-radius: 12px;
+    border: 1px solid var(--border); background: var(--bg-elevated);
+    cursor: pointer; transition: all 0.15s;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 600; color: var(--text-secondary);
+  }
+  .format-card:hover { border-color: var(--border-bright); }
+  .format-card.selected { border-color: var(--accent-cyan); background: rgba(0,212,255,0.05); color: var(--accent-cyan); }
+  .format-icon { font-size: 16px; margin-bottom: 2px; }
+  .format-ratio { font-size: 10px; font-weight: 400; color: var(--text-muted); }
+
+  /* BG style cards */
+  .bg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+  .bg-card {
+    padding: 12px; border-radius: 12px;
+    border: 1px solid var(--border); background: var(--bg-elevated);
+    cursor: pointer; transition: all 0.15s; text-align: left;
+  }
+  .bg-card:hover { border-color: var(--border-bright); }
+  .bg-card.selected { border-color: var(--accent-cyan); background: rgba(0,212,255,0.05); }
+  .bg-card-header { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px; }
+  .bg-card.selected .bg-card-header { color: var(--accent-cyan); }
+  .bg-card p { font-size: 11px; color: var(--text-muted); }
+
+  /* Music tracks */
+  .track-list { display: flex; flex-direction: column; gap: 6px; }
+  .track {
+    display: flex; align-items: center; gap: 12px; padding: 12px;
+    border: 1px solid var(--border); border-radius: 12px; background: var(--bg-elevated);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .track:hover { border-color: var(--border-bright); }
+  .track.selected { border-color: var(--accent-cyan); background: rgba(0,212,255,0.05); }
+  .track-play {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 1px solid var(--border); background: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 11px; color: var(--text-muted);
+    flex-shrink: 0; transition: all 0.15s;
+  }
+  .track.selected .track-play { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(0,212,255,0.1); }
+  .track-info { flex: 1; }
+  .track-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .track.selected .track-name { color: var(--accent-cyan); }
+  .track-meta { font-size: 11px; color: var(--text-muted); }
+  .track-dur { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: 14px;
+    padding: 32px; text-align: center;
+    cursor: pointer; transition: all 0.15s; margin-bottom: 20px;
+  }
+  .upload-zone:hover { border-color: rgba(0,212,255,0.5); background: rgba(0,212,255,0.03); }
+  .upload-zone .upload-icon { font-size: 28px; margin-bottom: 8px; opacity: 0.5; }
+  .upload-zone p { font-size: 13px; color: var(--text-secondary); }
+  .upload-zone span { color: var(--accent-cyan); }
+  .upload-zone .hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  /* Toggle */
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px; background: var(--bg-elevated);
+    border: 1px solid var(--border); border-radius: 14px; margin-bottom: 16px;
+  }
+  .toggle-left { display: flex; align-items: center; gap: 12px; }
+  .toggle-icon {
+    width: 36px; height: 36px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .toggle-icon.on { background: rgba(0,212,255,0.15); }
+  .toggle-icon.off { background: var(--bg-base); }
+  .toggle-title { font-size: 14px; font-weight: 600; }
+  .toggle-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .toggle-switch {
+    width: 44px; height: 24px; border-radius: 12px;
+    background: var(--border-bright); position: relative; cursor: pointer;
+    transition: background 0.25s; border: none; flex-shrink: 0;
+  }
+  .toggle-switch.on { background: var(--accent-cyan); }
+  .toggle-switch::after {
+    content: ''; position: absolute;
+    top: 4px; width: 16px; height: 16px; border-radius: 50%;
+    background: white; transition: left 0.25s cubic-bezier(0.4,0,0.2,1);
+    left: 4px;
+  }
+  .toggle-switch.on::after { left: 24px; }
+  .voice-section { display: none; }
+  .voice-section.visible { display: block; }
+  .voice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .voice-card {
+    padding: 12px; border-radius: 12px;
+    border: 1px solid var(--border); background: var(--bg-elevated);
+    cursor: pointer; transition: all 0.15s; text-align: left;
+  }
+  .voice-card:hover { border-color: var(--border-bright); }
+  .voice-card.selected { border-color: var(--accent-cyan); background: rgba(0,212,255,0.05); }
+  .voice-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .voice-avatar {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800;
+  }
+  .voice-avatar.male { background: rgba(59,130,246,0.2); color: #60A5FA; }
+  .voice-avatar.female { background: rgba(236,72,153,0.2); color: #F472B6; }
+  .voice-avatar.neutral { background: rgba(167,139,250,0.2); color: #A78BFA; }
+  .voice-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .voice-card.selected .voice-name { color: var(--accent-cyan); }
+  .voice-desc { font-size: 11px; color: var(--text-muted); }
+  .speed-row { margin-bottom: 20px; }
+  .speed-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  .speed-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .speed-header span { font-size: 13px; font-weight: 600; color: var(--accent-cyan); }
+  input[type='range'] {
+    -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer; width: 100%;
+  }
+  input[type='range']::-webkit-slider-runnable-track { background: var(--border); height: 4px; border-radius: 2px; }
+  input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none; background: var(--accent-cyan);
+    height: 16px; width: 16px; border-radius: 50%;
+    margin-top: -6px; box-shadow: 0 0 8px rgba(0,212,255,0.5);
+  }
+
+  /* Bottom bar */
+  .bottom-bar {
+    border-top: 1px solid var(--border);
+    background: rgba(17,17,24,0.85); backdrop-filter: blur(12px);
+    padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .undo-redo { display: flex; gap: 4px; }
+  .icon-btn {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: none; border: none; cursor: pointer;
+    color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+    font-size: 16px; transition: all 0.15s;
+  }
+  .icon-btn:hover { background: var(--bg-elevated); color: var(--text-primary); }
+  .icon-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .bar-actions { display: flex; gap: 8px; }
+
+  /* GALLERY */
+  .gallery-wrap { max-width: 1200px; margin: 0 auto; padding: 40px 24px 80px; }
+  .gallery-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px; gap: 16px; flex-wrap: wrap; }
+  .gallery-header h1 { font-size: 40px; font-weight: 900; letter-spacing: -0.02em; }
+  .gallery-header p { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 28px; border-bottom: 1px solid var(--border); padding-bottom: 16px; flex-wrap: wrap; }
+  .filter-btn {
+    padding: 8px 18px; border-radius: 12px; font-size: 13px; font-weight: 600;
+    border: 1px solid var(--border); background: none; color: var(--text-secondary);
+    cursor: pointer; transition: all 0.15s; font-family: inherit;
+  }
+  .filter-btn:hover { color: var(--text-primary); border-color: var(--border-bright); }
+  .filter-btn.active { background: var(--accent-cyan); color: var(--bg-base); border-color: var(--accent-cyan); box-shadow: var(--glow-cyan); }
+  .gallery-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+  @media(max-width:900px){.gallery-grid{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:600px){.gallery-grid{grid-template-columns:1fr;}}
+  .gallery-card {
+    background: rgba(17,17,24,0.75); border: 1px solid var(--border);
+    border-radius: 20px; overflow: hidden;
+    transition: border-color 0.15s;
+    position: relative;
+  }
+  .gallery-card:hover { border-color: var(--border-bright); }
+  .gallery-card:hover .card-overlay { opacity: 1; }
+  .gallery-thumb { background: rgba(0,0,0,0.2); padding: 16px; display: flex; justify-content: center; position: relative; }
+  .card-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.65);
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .gallery-foot { padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .gallery-foot-info h3 { font-size: 13px; font-weight: 600; }
+  .gallery-foot-info p { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* MODAL */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(6px); z-index: 100;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+  .modal {
+    background: var(--bg-elevated); border: 1px solid var(--border-bright);
+    border-radius: 24px; width: 100%; max-width: 680px;
+    transform: scale(0.95) translateY(12px); transition: transform 0.25s;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-backdrop.open .modal { transform: scale(1) translateY(0); }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+  }
+  .modal-header h2 { font-size: 18px; font-weight: 700; }
+  .modal-close {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: none; border: none; cursor: pointer;
+    color: var(--text-muted); font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .modal-close:hover { background: var(--bg-surface); color: var(--text-primary); }
+  .modal-body { padding: 20px 24px 24px; }
+
+  /* Toast */
+  .toast-container {
+    position: fixed; bottom: 24px; right: 24px; z-index: 200;
+    display: flex; flex-direction: column; gap: 8px;
+    max-width: 360px; pointer-events: none;
+  }
+  .toast {
+    background: var(--bg-elevated); border-radius: 14px;
+    border: 1px solid; padding: 12px 16px;
+    display: flex; align-items: flex-start; gap: 10px;
+    transform: translateX(80px); opacity: 0;
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    pointer-events: auto;
+  }
+  .toast.show { transform: translateX(0); opacity: 1; }
+  .toast.success { border-color: rgba(0,212,255,0.4); }
+  .toast.error { border-color: rgba(239,68,68,0.4); }
+  .toast.info { border-color: rgba(0,212,255,0.3); }
+  .toast.warning { border-color: rgba(245,158,11,0.4); }
+  .toast-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+  .toast-msg { font-size: 13px; color: var(--text-primary); flex: 1; line-height: 1.4; }
+  .toast-close {
+    font-size: 14px; color: var(--text-muted); cursor: pointer;
+    flex-shrink: 0; background: none; border: none; transition: color 0.15s; padding: 0;
+  }
+  .toast-close:hover { color: var(--text-primary); }
+
+  /* Mock video player controls */
+  .player-controls { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+  .player-bar { flex: 1; height: 4px; background: var(--border); border-radius: 2px; cursor: pointer; }
+  .player-fill { height: 100%; background: var(--accent-cyan); border-radius: 2px; width: 0; transition: width 0.1s linear; }
+  .player-time { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+
+  /* Section sub-labels */
+  .sub-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="logo" onclick="showPage('home')">
+      <div class="logo-icon">⚡</div>
+      <div class="logo-text">Ad<span>Studio</span></div>
+    </div>
+    <div class="nav-links">
+      <button class="nav-link active" data-page="home" onclick="showPage('home')">Home</button>
+      <button class="nav-link" data-page="generate" onclick="showPage('generate')">Generate</button>
+      <button class="nav-link" data-page="editor" onclick="showPage('editor')">Editor</button>
+      <button class="nav-link" data-page="gallery" onclick="showPage('gallery')">Gallery</button>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="showPage('generate')">Create Ad</button>
+  </div>
+</nav>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Preview</h2>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- PAGE: HOME                                                      -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page active" id="page-home">
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <div class="tag">✨ AI-Powered Ad Creation</div>
+    <h1>Create Stunning Ads<br><span class="cyan">With AI</span></h1>
+    <p>Paste any business URL. We scan it, extract the brand, and generate a polished video ad — ready to publish in under a minute.</p>
+    <form class="url-form" onsubmit="handleHomeSubmit(event)">
+      <div class="url-input-wrap">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <input class="url-input" id="homeUrl" type="text" placeholder="https://yourbusiness.com">
+      </div>
+      <button type="submit" class="btn btn-primary btn-lg">Generate Ad →</button>
+    </form>
+    <p class="hero-sub">No account required · Free demo · Results in seconds</p>
+  </section>
+
+  <div class="section">
+    <p class="section-label">Example Outputs</p>
+    <h2>From URL to Ad in Seconds</h2>
+    <div class="grid-3" id="showcaseGrid"></div>
+  </div>
+
+  <div class="features">
+    <div class="features-inner">
+      <div class="feature">
+        <div class="feature-icon">⏱</div>
+        <div><h3>URL to Ad in Seconds</h3><p>Paste any business URL and watch our AI extract brand identity, copy, and visuals automatically.</p></div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">✨</div>
+        <div><h3>AI-Powered Copywriting</h3><p>Generate on-brand headlines, taglines, and calls-to-action tuned to your industry and tone.</p></div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⬇</div>
+        <div><h3>Export-Ready Assets</h3><p>Download 16:9, 9:16, or 1:1 formats optimized for every major ad platform.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="padding-top:64px;text-align:center;">
+    <h2>Ready to see it in action?</h2>
+    <p style="color:var(--text-secondary);margin-bottom:28px">Try one of our sample businesses below.</p>
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px">
+      <button class="sample-btn" onclick="startGenerate('https://alpineroofing.com')">alpineroofing.com</button>
+      <button class="sample-btn" onclick="startGenerate('https://bellasbakery.co')">bellasbakery.co</button>
+      <button class="sample-btn" onclick="startGenerate('https://techflowsolutions.io')">techflowsolutions.io</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- PAGE: GENERATE                                                  -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-generate">
+  <div class="gen-wrap">
+    <div class="gen-inner">
+
+      <!-- Input step -->
+      <div class="step-input" id="genInput">
+        <span class="badge badge-cyan">Step 1 of 3</span>
+        <h1>Enter your website URL</h1>
+        <p>We'll analyze your site and build a custom ad tailored to your brand.</p>
+        <form onsubmit="handleGenSubmit(event)">
+          <div class="input-row">
+            <div class="url-input-wrap">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              <input class="url-input" id="genUrl" type="text" placeholder="https://yourbusiness.com" autofocus>
+            </div>
+            <button type="submit" class="btn btn-primary">Analyze →</button>
+          </div>
+        </form>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:16px;margin-bottom:10px">Try a sample:</p>
+        <div class="samples">
+          <button class="sample-btn" onclick="setGenUrl('https://alpineroofing.com')">alpineroofing.com</button>
+          <button class="sample-btn" onclick="setGenUrl('https://bellasbakery.co')">bellasbakery.co</button>
+          <button class="sample-btn" onclick="setGenUrl('https://techflowsolutions.io')">techflowsolutions.io</button>
+        </div>
+      </div>
+
+      <!-- Loading step -->
+      <div class="step-loading" id="genLoading">
+        <div class="spinner-wrap">
+          <div class="spinner-bg"></div>
+          <div class="spinner-ring"></div>
+          <div class="spinner-dot"></div>
+        </div>
+        <h2>Creating your ad...</h2>
+        <div class="status-msg"><p id="statusMsg">Fetching website content...</p></div>
+        <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+        <div class="step-dots" id="stepDots"></div>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:16px">Analyzing <span id="analyzingUrl" style="color:var(--text-secondary);font-weight:500"></span></p>
+      </div>
+
+      <!-- Preview step -->
+      <div class="step-preview" id="genPreview">
+        <div class="preview-header">
+          <div>
+            <div class="check"><span>✓</span> Ad Generated</div>
+            <h2>Here's your ad</h2>
+          </div>
+          <span class="badge badge-neutral" id="previewUrlBadge"></span>
+        </div>
+        <div class="preview-grid">
+          <div class="preview-canvas-wrap">
+            <canvas id="previewCanvas"></canvas>
+          </div>
+          <div>
+            <div class="brand-panel">
+              <div class="brand-panel-label">Extracted Brand Data</div>
+              <div class="brand-row"><label>Business Name</label><p id="brandName">—</p></div>
+              <div class="brand-row"><label>Tagline</label><p class="sm" id="brandTagline">—</p></div>
+              <div class="brand-row">
+                <label>Brand Colors</label>
+                <div class="color-swatches">
+                  <div class="swatch"><div class="swatch-dot" id="swatch1"></div><code id="swatchCode1"></code></div>
+                  <div class="swatch"><div class="swatch-dot" id="swatch2"></div><code id="swatchCode2"></code></div>
+                </div>
+              </div>
+              <div class="brand-row">
+                <div class="brand-panel-badges">
+                  <span class="badge badge-cyan" id="brandIndustry"></span>
+                  <span class="badge badge-neutral" id="brandTone"></span>
+                </div>
+              </div>
+              <div class="brand-panel-url">Detected from: <span id="brandUrl"></span></div>
+            </div>
+            <div class="preview-actions">
+              <button class="btn btn-primary" style="width:100%" onclick="goToEditor()">✏ Edit This Ad</button>
+              <button class="btn btn-secondary" style="width:100%" onclick="resetGenerate()">↺ Generate Another</button>
+              <button class="btn btn-ghost" style="width:100%" onclick="showToast('Download available in the full version.','info')">⬇ Download Preview</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- PAGE: EDITOR                                                    -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-editor">
+  <div class="editor-wrap">
+    <div class="editor-body">
+      <!-- Left: canvas -->
+      <div class="editor-left">
+        <canvas id="editorCanvas"></canvas>
+        <div class="editor-controls">
+          <button class="play-btn" id="edPlayBtn" onclick="toggleEditorPlay()">⏸</button>
+          <div class="timeline"><div class="timeline-progress playing" id="edTimeline"></div></div>
+          <span class="duration">0:30</span>
+        </div>
+      </div>
+      <!-- Right: controls -->
+      <div class="editor-right">
+        <div class="tabs-bar">
+          <button class="tab-btn active" onclick="switchTab('content',this)">Content</button>
+          <button class="tab-btn" onclick="switchTab('style',this)">Style</button>
+          <button class="tab-btn" onclick="switchTab('media',this)">Media</button>
+          <button class="tab-btn" onclick="switchTab('voiceover',this)">Voice</button>
+        </div>
+        <div class="tab-content">
+
+          <!-- CONTENT TAB -->
+          <div class="tab-panel active" id="tab-content">
+            <div class="field">
+              <label>Business Name</label>
+              <input type="text" id="edName" oninput="updateEditor()" placeholder="e.g. TechFlow Solutions">
+            </div>
+            <div class="field">
+              <label>Tagline <span class="count" id="taglineCount">0/60</span></label>
+              <input type="text" id="edTagline" oninput="updateEditor();updateCount('edTagline','taglineCount',60)" placeholder="Your compelling tagline">
+            </div>
+            <div class="field">
+              <label>Call to Action</label>
+              <input type="text" id="edCta" oninput="updateEditor()" placeholder="e.g. Get Started">
+            </div>
+            <div class="field">
+              <label>Body Copy <span class="count" id="bodyCount">0/150</span></label>
+              <textarea id="edBody" oninput="updateEditor();updateCount('edBody','bodyCount',150)" placeholder="Supporting copy..."></textarea>
+            </div>
+          </div>
+
+          <!-- STYLE TAB -->
+          <div class="tab-panel" id="tab-style">
+            <p class="sub-label">Color Theme</p>
+            <div class="palette-grid" id="paletteGrid"></div>
+            <p class="sub-label">Font Style</p>
+            <div class="option-grid" id="fontGrid"></div>
+            <p class="sub-label">Ad Format</p>
+            <div class="format-options" id="formatOptions"></div>
+          </div>
+
+          <!-- MEDIA TAB -->
+          <div class="tab-panel" id="tab-media">
+            <p class="sub-label">Logo</p>
+            <div class="upload-zone" onclick="showToast('Logo uploaded successfully!','success')">
+              <div class="upload-icon">⬆</div>
+              <p>Drop your logo here or <span>browse</span></p>
+              <p class="hint">PNG, SVG, or JPG — max 2MB</p>
+            </div>
+            <p class="sub-label">Background Style</p>
+            <div class="bg-grid" id="bgGrid"></div>
+            <p class="sub-label" style="display:flex;align-items:center;gap:6px">♪ Background Music</p>
+            <div class="track-list" id="trackList"></div>
+          </div>
+
+          <!-- VOICEOVER TAB -->
+          <div class="tab-panel" id="tab-voiceover">
+            <div class="toggle-row">
+              <div class="toggle-left">
+                <div class="toggle-icon" id="voiceIcon">🎤</div>
+                <div>
+                  <div class="toggle-title">Auto-generated voiceover</div>
+                  <div class="toggle-desc">AI reads your ad copy aloud</div>
+                </div>
+              </div>
+              <button class="toggle-switch" id="voiceToggle" onclick="toggleVoiceover()"></button>
+            </div>
+            <div class="voice-section" id="voiceSection">
+              <p class="sub-label">Select Voice</p>
+              <div class="voice-grid" id="voiceGrid"></div>
+              <div class="speed-row">
+                <div class="speed-header"><p class="sub-label" style="margin:0">Speed</p><span id="speedLabel">Normal</span></div>
+                <input type="range" min="0.75" max="1.5" step="0.25" value="1" oninput="updateSpeedLabel(this.value)">
+                <div class="speed-labels"><span>Slow</span><span>Normal</span><span>Fast</span><span>Very Fast</span></div>
+              </div>
+              <button class="btn btn-secondary" style="width:100%" id="voicePreviewBtn" onclick="previewVoiceover()">▶ Preview Voiceover</button>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-bar">
+          <div class="undo-redo">
+            <button class="icon-btn" title="Undo" onclick="showToast('Undo — not available in demo','info')">↩</button>
+            <button class="icon-btn" title="Redo" onclick="showToast('Redo — not available in demo','info')">↪</button>
+          </div>
+          <div class="bar-actions">
+            <button class="btn btn-ghost btn-sm" onclick="saveDraft()">💾 Save Draft</button>
+            <button class="btn btn-primary btn-sm" onclick="exportAd()">⬇ Export Ad</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- PAGE: GALLERY                                                   -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-gallery">
+  <div class="gallery-wrap">
+    <div class="gallery-header">
+      <div>
+        <h1>Saved Ads</h1>
+        <p>6 ads in your library</p>
+      </div>
+      <button class="btn btn-primary" onclick="showPage('generate')">+ Create New Ad</button>
+    </div>
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-btn active" onclick="filterGallery('all',this)">All Ads</button>
+      <button class="filter-btn" onclick="filterGallery('landscape',this)">Landscape</button>
+      <button class="filter-btn" onclick="filterGallery('vertical',this)">Vertical</button>
+      <button class="filter-btn" onclick="filterGallery('square',this)">Square</button>
+    </div>
+    <div class="gallery-grid" id="galleryGrid"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════
+const BRANDS = {
+  alpine: {
+    name:'Alpine Roofing Co.', tagline:'Built to Last. Installed Today.',
+    cta:'Get Free Quote', body:'Expert roofing services with 20+ years of experience. Licensed, insured, and ready to protect your home.',
+    primary:'#1E88E5', secondary:'#F59E0B', bg:'#0D1B2A', industry:'Home Services', tone:'Professional', logo:'ARC'
+  },
+  bella: {
+    name:"Bella's Bakery", tagline:'Handcrafted with Love, Baked Fresh Daily.',
+    cta:'Order Now', body:'Artisan pastries, custom cakes, and seasonal specials made from locally sourced ingredients.',
+    primary:'#E91E8C', secondary:'#FFD700', bg:'#1A0A12', industry:'Food & Beverage', tone:'Warm & Friendly', logo:'BB'
+  },
+  tech: {
+    name:'TechFlow Solutions', tagline:'Automate Everything. Scale Infinitely.',
+    cta:'Start Free Trial', body:'Enterprise workflow automation that integrates with your existing stack in under 30 minutes.',
+    primary:'#00D4FF', secondary:'#7C3AED', bg:'#050510', industry:'Technology', tone:'Bold & Innovative', logo:'TF'
+  },
+  generic: {
+    name:'Your Business', tagline:'Your Message. Your Brand.',
+    cta:'Learn More', body:'Delivering exceptional value and quality to customers everywhere.',
+    primary:'#00D4FF', secondary:'#F59E0B', bg:'#0A0A1A', industry:'Business', tone:'Professional', logo:'YB'
+  }
+}
+
+function detectBrand(url) {
+  const l = url.toLowerCase()
+  if(l.includes('roof')||l.includes('alpine')) return BRANDS.alpine
+  if(l.includes('bella')||l.includes('bak')) return BRANDS.bella
+  if(l.includes('tech')||l.includes('flow')||l.includes('software')) return BRANDS.tech
+  return BRANDS.generic
+}
+
+const PALETTES = [
+  {id:'midnight',name:'Midnight Tech',primary:'#00D4FF',secondary:'#7C3AED',bg:'#050510'},
+  {id:'golden',name:'Golden Hour',primary:'#F59E0B',secondary:'#EF4444',bg:'#0F0A00'},
+  {id:'arctic',name:'Arctic Minimal',primary:'#E2E8F0',secondary:'#94A3B8',bg:'#020408'},
+  {id:'ember',name:'Ember Bold',primary:'#EF4444',secondary:'#F97316',bg:'#0F0500'},
+  {id:'ocean',name:'Ocean Deep',primary:'#06B6D4',secondary:'#0EA5E9',bg:'#000A14'},
+  {id:'mono',name:'Monochrome',primary:'#FFFFFF',secondary:'#888888',bg:'#000000'},
+]
+
+const TRACKS = [
+  {id:'cinematic',name:'Cinematic Build',genre:'Cinematic',bpm:72,dur:'2:34',mood:'Epic'},
+  {id:'corporate',name:'Upbeat Corporate',genre:'Corporate',bpm:120,dur:'1:58',mood:'Energetic'},
+  {id:'lofi',name:'Lo-Fi Chill',genre:'Lo-Fi',bpm:88,dur:'3:12',mood:'Relaxed'},
+  {id:'orchestral',name:'Epic Orchestral',genre:'Orchestral',bpm:96,dur:'2:48',mood:'Dramatic'},
+  {id:'electronic',name:'Minimal Electronic',genre:'Electronic',bpm:110,dur:'2:22',mood:'Modern'},
+]
+
+const VOICES = [
+  {id:'james',name:'James',accent:'American',gender:'male',desc:'Deep & Authoritative'},
+  {id:'sofia',name:'Sofia',accent:'American',gender:'female',desc:'Warm & Friendly'},
+  {id:'oliver',name:'Oliver',accent:'British',gender:'male',desc:'Crisp & Professional'},
+  {id:'maya',name:'Maya',accent:'Australian',gender:'female',desc:'Bright & Conversational'},
+  {id:'alex',name:'Alex',accent:'American',gender:'neutral',desc:'Clear & Neutral'},
+  {id:'elena',name:'Elena',accent:'British',gender:'female',desc:'Elegant & Refined'},
+]
+
+const MOCK_ADS = [
+  {id:'a1',name:'TechFlow Solutions',tagline:'Automate Everything.',format:'landscape',primary:'#00D4FF',secondary:'#7C3AED',bg:'#050510',logo:'TF',date:'Apr 1, 2026',dur:'0:30'},
+  {id:'a2',name:"Bella's Bakery",tagline:'Handcrafted with Love.',format:'vertical',primary:'#E91E8C',secondary:'#FFD700',bg:'#1A0A12',logo:'BB',date:'Mar 29, 2026',dur:'0:15'},
+  {id:'a3',name:'Alpine Roofing Co.',tagline:'Built to Last.',format:'square',primary:'#1E88E5',secondary:'#F59E0B',bg:'#0D1B2A',logo:'ARC',date:'Mar 25, 2026',dur:'0:30'},
+  {id:'a4',name:'TechFlow Solutions',tagline:'Your Workflow, Reinvented.',format:'vertical',primary:'#7C3AED',secondary:'#00D4FF',bg:'#080512',logo:'TF',date:'Mar 22, 2026',dur:'1:00'},
+  {id:'a5',name:"Bella's Bakery",tagline:'Every Bite, a Celebration.',format:'landscape',primary:'#FFD700',secondary:'#E91E8C',bg:'#140D00',logo:'BB',date:'Mar 18, 2026',dur:'0:30'},
+  {id:'a6',name:'Alpine Roofing Co.',tagline:'Protect What Matters.',format:'square',primary:'#F59E0B',secondary:'#1E88E5',bg:'#120A00',logo:'ARC',date:'Mar 15, 2026',dur:'0:15'},
+]
+
+const STEPS = [
+  {msg:'Fetching website content...',dur:1100},
+  {msg:'Analyzing brand identity...',dur:1000},
+  {msg:'Extracting color palette...',dur:900},
+  {msg:'Generating ad copy...',dur:1200},
+  {msg:'Composing visual layout...',dur:1300},
+  {msg:'Rendering final preview...',dur:800},
+]
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+const edState = {
+  name:'TechFlow Solutions', tagline:'Automate Everything. Scale Infinitely.',
+  cta:'Start Free Trial', body:'Enterprise workflow automation that integrates with your existing stack in under 30 minutes.',
+  palette: PALETTES[0], fontStyle:'modern', format:'landscape',
+  bgStyle:'particles', track:null, voiceEnabled:false, voice:null, speed:1,
+  playing:true,
+}
+let edRaf = null
+let edParticles = []
+let currentBrand = BRANDS.tech
+
+// ═══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.getElementById('page-'+id).classList.add('active')
+  document.querySelectorAll('.nav-link').forEach(l => {
+    l.classList.toggle('active', l.dataset.page === id)
+  })
+  window.scrollTo(0,0)
+  if(id==='editor') { setTimeout(startEditorCanvas, 100) }
+  if(id==='gallery') { renderGallery('all') }
+  if(id==='home') { setTimeout(renderShowcase, 100) }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CANVAS ENGINE
+// ═══════════════════════════════════════════════════════════════
+function hexRgb(hex){
+  const c=hex.replace('#','')
+  return [parseInt(c.slice(0,2),16)||0,parseInt(c.slice(2,4),16)||0,parseInt(c.slice(4,6),16)||0]
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath()
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.arcTo(x+w,y,x+w,y+r,r)
+  ctx.lineTo(x+w,y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r)
+  ctx.lineTo(x+r,y+h); ctx.arcTo(x,y+h,x,y+h-r,r)
+  ctx.lineTo(x,y+r); ctx.arcTo(x,y,x+r,y,r); ctx.closePath()
+}
+
+function wrapText(ctx,text,x,y,mw,lh,max=3){
+  const words=text.split(' '); let line='', n=0
+  for(const w of words){
+    if(n>=max) break
+    const t=line+w+' '
+    if(ctx.measureText(t).width>mw && line!==''){
+      ctx.fillText(line.trim(),x,y+n*lh); line=w+' '; n++
+    } else line=t
+  }
+  if(line&&n<max) ctx.fillText(line.trim(),x,y+n*lh)
+}
+
+function drawAd(canvas, opts, timestamp=0) {
+  const ctx = canvas.getContext('2d')
+  const {name,tagline,cta,logo,primary,secondary,bg,bgStyle,animated,particles} = opts
+  const W=canvas.width, H=canvas.height
+  const t = timestamp*0.001
+  const [pr,pg,pb]=hexRgb(primary)
+  const [br,bgr,bb]=hexRgb(bg)
+  const [sr,sg,sb]=hexRgb(secondary)
+
+  ctx.clearRect(0,0,W,H)
+
+  // Background
+  if(bgStyle==='gradient'){
+    const off=Math.sin(t*0.3)*0.15
+    const g=ctx.createLinearGradient(W*(0.2+off),0,W*(0.8-off),H)
+    g.addColorStop(0,bg); g.addColorStop(0.45+Math.sin(t*0.2)*0.1,`rgba(${pr},${pg},${pb},0.22)`); g.addColorStop(1,bg)
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H)
+    const bg2=ctx.createRadialGradient(W*(0.7+Math.sin(t*0.4)*0.1),H*(0.3+Math.cos(t*0.3)*0.1),0,W*0.7,H*0.3,W*0.5)
+    bg2.addColorStop(0,`rgba(${sr},${sg},${sb},0.18)`); bg2.addColorStop(1,'transparent')
+    ctx.fillStyle=bg2; ctx.fillRect(0,0,W,H)
+  } else if(bgStyle==='particles'){
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H)
+    particles.forEach(p=>{
+      if(animated){p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0}
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2)
+      ctx.fillStyle=`rgba(${pr},${pg},${pb},${p.o*0.8})`; ctx.fill()
+    })
+    for(let i=0;i<particles.length;i++)for(let j=i+1;j<particles.length;j++){
+      const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y
+      const d=Math.sqrt(dx*dx+dy*dy)
+      if(d<80){ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);ctx.strokeStyle=`rgba(${pr},${pg},${pb},${(1-d/80)*0.2})`;ctx.lineWidth=0.5;ctx.stroke()}
+    }
+  } else if(bgStyle==='geometric'){
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H)
+    for(let i=0;i<7;i++){
+      ctx.save(); ctx.translate(W*(0.1+i*0.14),H*(0.2+Math.sin(i)*0.3))
+      ctx.rotate((t*0.1+i*0.8)%(Math.PI*2))
+      const s=60+i*25; roundRect(ctx,-s/2,-s/2,s,s,8)
+      ctx.strokeStyle=`rgba(${pr},${pg},${pb},${0.06+i%3*0.04})`; ctx.lineWidth=1; ctx.stroke(); ctx.restore()
+    }
+  } else {
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H)
+    const band=ctx.createLinearGradient(0,H*0.6,0,H)
+    band.addColorStop(0,'transparent'); band.addColorStop(1,`rgba(${pr},${pg},${pb},0.1)`)
+    ctx.fillStyle=band; ctx.fillRect(0,0,W,H)
+  }
+
+  // Vignette
+  const v=ctx.createRadialGradient(W/2,H/2,H*0.3,W/2,H/2,H*0.85)
+  v.addColorStop(0,'transparent'); v.addColorStop(1,`rgba(${br},${bgr},${bb},0.55)`)
+  ctx.fillStyle=v; ctx.fillRect(0,0,W,H)
+
+  // Logo badge
+  const bW=Math.max(56,logo.length*13+20), bH=30
+  roundRect(ctx,18,18,bW,bH,8); ctx.fillStyle=`rgba(${pr},${pg},${pb},0.9)`; ctx.fill()
+  ctx.font=`700 12px system-ui`; ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle'
+  ctx.fillText(logo,18+bW/2,18+bH/2)
+
+  // Business name
+  const nSize=W<300?18:W<450?22:28
+  ctx.font=`900 ${nSize}px system-ui`; ctx.fillStyle='#FFFFFF'; ctx.textAlign='left'; ctx.textBaseline='alphabetic'
+  const nameY=H*0.42
+  ctx.fillText(name,22,nameY)
+
+  // Tagline
+  const tSize=W<300?11:W<450?12:13
+  ctx.font=`400 ${tSize}px system-ui`; ctx.fillStyle='rgba(240,240,255,0.72)'
+  wrapText(ctx,tagline,22,nameY+nSize*1.3,W-60,tSize*1.6,2)
+
+  // CTA button
+  const pulse=1+Math.sin(t*2.2)*0.015
+  const ctaFs=W<300?11:13
+  ctx.font=`700 ${ctaFs}px system-ui`
+  const btnW=(ctx.measureText(cta).width+42)*pulse, btnH=34*pulse
+  const btnX=22, btnY=H-52
+  roundRect(ctx,btnX,btnY,btnW,btnH,8); ctx.fillStyle=`rgba(${pr},${pg},${pb},0.95)`; ctx.fill()
+  ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle'
+  ctx.fillText(cta,btnX+btnW/2,btnY+btnH/2)
+
+  // Shimmer
+  const shimP=(timestamp%3500)/3500
+  if(shimP<0.25){
+    const sx=-W*0.15+shimP*W*1.6
+    const sg2=ctx.createLinearGradient(sx-50,0,sx+50,H)
+    sg2.addColorStop(0,'transparent'); sg2.addColorStop(0.5,'rgba(255,255,255,0.04)'); sg2.addColorStop(1,'transparent')
+    ctx.fillStyle=sg2; ctx.fillRect(0,0,W,H)
+  }
+}
+
+function makeParticles(W,H,n=60){
+  return Array.from({length:n},()=>({
+    x:Math.random()*W,y:Math.random()*H,
+    vx:(Math.random()-0.5)*0.4,vy:(Math.random()-0.5)*0.4,
+    o:Math.random()*0.5+0.1,r:Math.random()*2+0.5
+  }))
+}
+
+// Static draw (no animation)
+function staticDraw(canvas, opts) {
+  drawAd(canvas, {...opts, animated:false}, 500)
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EDITOR CANVAS
+// ═══════════════════════════════════════════════════════════════
+const FORMAT_DIMS = {
+  landscape:{dw:560,dh:315,iw:1120,ih:630},
+  vertical:{dw:236,dh:420,iw:472,ih:840},
+  square:{dw:360,dh:360,iw:720,ih:720},
+}
+
+function startEditorCanvas() {
+  if(edRaf) cancelAnimationFrame(edRaf)
+  const canvas = document.getElementById('editorCanvas')
+  const dims = FORMAT_DIMS[edState.format]
+  canvas.width=dims.iw; canvas.height=dims.ih
+  canvas.style.width=dims.dw+'px'; canvas.style.height=dims.dh+'px'
+  canvas.style.borderRadius='12px'
+  const ctx=canvas.getContext('2d')
+  ctx.scale(dims.iw/dims.dw, dims.ih/dims.dh)
+  if(edParticles.length===0) edParticles=makeParticles(dims.dw,dims.dh)
+
+  let start=null
+  function loop(ts){
+    if(!start) start=ts
+    drawAd(canvas, {
+      name:edState.name, tagline:edState.tagline, cta:edState.cta, logo:currentBrand.logo,
+      primary:edState.palette.primary, secondary:edState.palette.secondary, bg:edState.palette.bg,
+      bgStyle:edState.bgStyle, animated:edState.playing, particles:edParticles
+    }, ts-start)
+    if(edState.playing) edRaf=requestAnimationFrame(loop)
+  }
+  edRaf=requestAnimationFrame(loop)
+}
+
+function updateEditor() {
+  edState.name = document.getElementById('edName').value || 'Your Business'
+  edState.tagline = document.getElementById('edTagline').value || ''
+  edState.cta = document.getElementById('edCta').value || 'Learn More'
+  edState.body = document.getElementById('edBody').value || ''
+}
+
+function toggleEditorPlay() {
+  edState.playing = !edState.playing
+  document.getElementById('edPlayBtn').textContent = edState.playing ? '⏸' : '▶'
+  document.getElementById('edTimeline').classList.toggle('playing', edState.playing)
+  if(edState.playing) startEditorCanvas()
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SHOWCASE CANVASES
+// ═══════════════════════════════════════════════════════════════
+const SHOWCASE_CONFIGS = [
+  {brand:BRANDS.tech, format:'landscape', bgStyle:'particles', badge:'Technology', badgeClass:'badge-cyan'},
+  {brand:BRANDS.bella, format:'square', bgStyle:'gradient', badge:'Food & Beverage', badgeClass:'badge-amber'},
+  {brand:BRANDS.alpine, format:'landscape', bgStyle:'geometric', badge:'Home Services', badgeClass:'badge-purple'},
+]
+const showcaseParticles = []
+
+function renderShowcase() {
+  const grid = document.getElementById('showcaseGrid')
+  if(!grid || grid.children.length>0) return
+  SHOWCASE_CONFIGS.forEach((cfg,i) => {
+    const dims = FORMAT_DIMS[cfg.format]
+    const card = document.createElement('div')
+    card.className='card'
+    card.innerHTML=`
+      <div class="card-canvas-wrap">
+        <canvas id="showcase${i}" width="${dims.iw}" height="${dims.ih}"
+          style="width:${Math.min(dims.dw,300)}px;height:${Math.min(dims.dh,169)}px;border-radius:8px"></canvas>
+      </div>
+      <div class="card-info">
+        <div><h3>${cfg.brand.name}</h3><p>${cfg.brand.tagline.slice(0,40)}...</p></div>
+        <span class="badge ${cfg.badgeClass}">${cfg.badge}</span>
+      </div>
+    `
+    grid.appendChild(card)
+    if(!showcaseParticles[i]) showcaseParticles[i]=makeParticles(Math.min(dims.dw,300),Math.min(dims.dh,169))
+    const canvas=document.getElementById('showcase'+i)
+    const ctx=canvas.getContext('2d')
+    const dw=Math.min(dims.dw,300), dh=Math.min(dims.dh,169)
+    ctx.scale(dims.iw/dw,dims.ih/dh)
+    staticDraw(canvas,{
+      name:cfg.brand.name,tagline:cfg.brand.tagline,cta:cfg.brand.cta,logo:cfg.brand.logo,
+      primary:cfg.brand.primary,secondary:cfg.brand.secondary,bg:cfg.brand.bg,
+      bgStyle:cfg.bgStyle,particles:showcaseParticles[i]
+    })
+  })
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GENERATE FLOW
+// ═══════════════════════════════════════════════════════════════
+let genAbort = false
+
+function handleHomeSubmit(e) {
+  e.preventDefault()
+  const url = document.getElementById('homeUrl').value.trim() || 'https://techflowsolutions.io'
+  startGenerate(url)
+}
+
+function handleGenSubmit(e) {
+  e.preventDefault()
+  const url = document.getElementById('genUrl').value.trim() || 'https://techflowsolutions.io'
+  runGeneration(url)
+}
+
+function startGenerate(url) {
+  showPage('generate')
+  setTimeout(() => { document.getElementById('genUrl').value=url; runGeneration(url) }, 150)
+}
+
+function setGenUrl(url) {
+  document.getElementById('genUrl').value=url
+}
+
+async function runGeneration(url) {
+  genAbort=false
+  const inp=document.getElementById('genInput')
+  const load=document.getElementById('genLoading')
+  const prev=document.getElementById('genPreview')
+  inp.style.display='none'; load.style.display='block'; prev.style.display='none'
+
+  document.getElementById('analyzingUrl').textContent=url.replace('https://','').replace('http://','')
+
+  // Build step dots
+  const dots=document.getElementById('stepDots')
+  dots.innerHTML=STEPS.map((_,i)=>`<div class="step-dot" id="dot${i}"></div>`).join('')
+
+  const totalDur=STEPS.reduce((a,s)=>a+s.dur,0)
+  let elapsed=0
+
+  for(let i=0;i<STEPS.length;i++){
+    if(genAbort) return
+    document.getElementById('statusMsg').textContent=STEPS[i].msg
+    document.getElementById('dot'+i).classList.add('done')
+    await sleep(STEPS[i].dur)
+    elapsed+=STEPS[i].dur
+    document.getElementById('progressBar').style.width=Math.round(elapsed/totalDur*100)+'%'
+  }
+
+  // Show preview
+  load.style.display='none'
+  prev.style.display='block'
+
+  const brand=detectBrand(url)
+  currentBrand=brand
+  document.getElementById('brandName').textContent=brand.name
+  document.getElementById('brandTagline').textContent=brand.tagline
+  document.getElementById('swatch1').style.background=brand.primary
+  document.getElementById('swatch2').style.background=brand.secondary
+  document.getElementById('swatchCode1').textContent=brand.primary
+  document.getElementById('swatchCode2').textContent=brand.secondary
+  document.getElementById('brandIndustry').textContent=brand.industry
+  document.getElementById('brandTone').textContent=brand.tone
+  document.getElementById('brandUrl').textContent=url
+  document.getElementById('previewUrlBadge').textContent=url.replace('https://','').split('/')[0]
+
+  // Draw preview canvas
+  const canvas=document.getElementById('previewCanvas')
+  canvas.width=1120; canvas.height=630
+  canvas.style.width='560px'; canvas.style.height='315px'; canvas.style.borderRadius='12px'
+  const ctx=canvas.getContext('2d')
+  ctx.scale(2,2)
+  const parts=makeParticles(560,315)
+  let start=null, previewRaf=null
+  function loop(ts){
+    if(!start) start=ts
+    drawAd(canvas,{name:brand.name,tagline:brand.tagline,cta:brand.cta,logo:brand.logo,
+      primary:brand.primary,secondary:brand.secondary,bg:brand.bg,bgStyle:'particles',animated:true,particles:parts},ts-start)
+    previewRaf=requestAnimationFrame(loop)
+  }
+  previewRaf=requestAnimationFrame(loop)
+  window._previewRaf=previewRaf
+}
+
+function resetGenerate() {
+  genAbort=true
+  if(window._previewRaf) cancelAnimationFrame(window._previewRaf)
+  document.getElementById('genInput').style.display='block'
+  document.getElementById('genLoading').style.display='none'
+  document.getElementById('genPreview').style.display='none'
+  document.getElementById('genUrl').value=''
+  document.getElementById('progressBar').style.width='0'
+}
+
+function goToEditor() {
+  // Load current brand into editor
+  edState.name=currentBrand.name; edState.tagline=currentBrand.tagline
+  edState.cta=currentBrand.cta; edState.body=currentBrand.body
+  edState.palette={id:'brand',name:currentBrand.name,primary:currentBrand.primary,secondary:currentBrand.secondary,bg:currentBrand.bg}
+  edParticles=[]
+  showPage('editor')
+  setTimeout(() => {
+    document.getElementById('edName').value=edState.name
+    document.getElementById('edTagline').value=edState.tagline
+    document.getElementById('edCta').value=edState.cta
+    document.getElementById('edBody').value=edState.body
+    updateCount('edTagline','taglineCount',60)
+    updateCount('edBody','bodyCount',150)
+  }, 50)
+}
+
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)) }
+
+// ═══════════════════════════════════════════════════════════════
+// EDITOR UI
+// ═══════════════════════════════════════════════════════════════
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'))
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'))
+  btn.classList.add('active')
+  document.getElementById('tab-'+id).classList.add('active')
+}
+
+function updateCount(inputId, countId, max) {
+  const val=document.getElementById(inputId).value.length
+  const el=document.getElementById(countId)
+  el.textContent=val+'/'+max
+  el.classList.toggle('warn',val>max)
+}
+
+function initEditorPanels() {
+  // Palettes
+  const pg=document.getElementById('paletteGrid')
+  pg.innerHTML=PALETTES.map((p,i)=>`
+    <div class="palette-card ${i===0?'selected':''}" onclick="selectPalette('${p.id}',this)">
+      <div class="palette-swatches">
+        <div class="palette-swatch" style="background:${p.primary}"></div>
+        <div class="palette-swatch" style="background:${p.secondary}"></div>
+        <div class="palette-swatch" style="background:${p.bg}"></div>
+      </div>
+      <div class="palette-name">${p.name}</div>
+    </div>`).join('')
+
+  // Fonts
+  const fonts=[{id:'modern',label:'Modern'},{id:'bold',label:'Bold'},{id:'elegant',label:'Elegant'},{id:'playful',label:'Playful'}]
+  document.getElementById('fontGrid').innerHTML=fonts.map((f,i)=>`
+    <div class="option-card ${i===0?'selected':''}" onclick="selectFont('${f.id}',this)">
+      <span class="sample">Aa</span><span class="label">${f.label}</span>
+    </div>`).join('')
+
+  // Formats
+  const fmts=[{id:'landscape',label:'Landscape',icon:'🖥',ratio:'16:9'},{id:'vertical',label:'Vertical',icon:'📱',ratio:'9:16'},{id:'square',label:'Square',icon:'⬜',ratio:'1:1'}]
+  document.getElementById('formatOptions').innerHTML=fmts.map(f=>`
+    <div class="format-card ${f.id==='landscape'?'selected':''}" onclick="selectFormat('${f.id}',this)">
+      <span class="format-icon">${f.icon}</span>
+      <span>${f.label}</span>
+      <span class="format-ratio">${f.ratio}</span>
+    </div>`).join('')
+
+  // BG styles
+  const bgs=[{id:'gradient',label:'AI Gradient',icon:'🌈',desc:'Animated color wash'},{id:'particles',label:'Particles',icon:'✦',desc:'Connected particle field'},{id:'geometric',label:'Geometric',icon:'⬡',desc:'Rotating shapes'},{id:'minimal',label:'Minimal',icon:'—',desc:'Clean solid fill'}]
+  document.getElementById('bgGrid').innerHTML=bgs.map((b,i)=>`
+    <div class="bg-card ${i===1?'selected':''}" onclick="selectBg('${b.id}',this)">
+      <div class="bg-card-header">${b.icon} ${b.label}</div>
+      <p>${b.desc}</p>
+    </div>`).join('')
+
+  // Tracks
+  document.getElementById('trackList').innerHTML=TRACKS.map(t=>`
+    <div class="track" id="track-${t.id}" onclick="selectTrack('${t.id}',this)">
+      <button class="track-play" onclick="event.stopPropagation();showToast('Music preview not available in demo','info')">▶</button>
+      <div class="track-info">
+        <div class="track-name">${t.name}</div>
+        <div class="track-meta">${t.genre} · ${t.bpm} BPM · ${t.mood}</div>
+      </div>
+      <span class="track-dur">${t.dur}</span>
+    </div>`).join('')
+
+  // Voices
+  document.getElementById('voiceGrid').innerHTML=VOICES.map(v=>`
+    <div class="voice-card" onclick="selectVoice('${v.id}',this)">
+      <div class="voice-header">
+        <div class="voice-avatar ${v.gender}">${v.name[0]}</div>
+        <div class="voice-name">${v.name}</div>
+      </div>
+      <div class="voice-desc">${v.desc}</div>
+      <div class="voice-desc" style="margin-top:2px">${v.accent}</div>
+    </div>`).join('')
+
+  // Prefill
+  document.getElementById('edName').value=edState.name
+  document.getElementById('edTagline').value=edState.tagline
+  document.getElementById('edCta').value=edState.cta
+  document.getElementById('edBody').value=edState.body
+  updateCount('edTagline','taglineCount',60)
+  updateCount('edBody','bodyCount',150)
+}
+
+function selectPalette(id,el){
+  const p=PALETTES.find(x=>x.id===id); if(!p) return
+  edState.palette=p; edParticles=[]
+  document.querySelectorAll('.palette-card').forEach(c=>c.classList.remove('selected'))
+  el.classList.add('selected')
+  restartEditorCanvas()
+}
+function selectFont(id,el){
+  edState.fontStyle=id
+  document.querySelectorAll('.option-card').forEach(c=>c.classList.remove('selected'))
+  el.classList.add('selected')
+}
+function selectFormat(id,el){
+  edState.format=id; edParticles=[]
+  document.querySelectorAll('.format-card').forEach(c=>c.classList.remove('selected'))
+  el.classList.add('selected')
+  restartEditorCanvas()
+}
+function selectBg(id,el){
+  edState.bgStyle=id
+  document.querySelectorAll('.bg-card').forEach(c=>c.classList.remove('selected'))
+  el.classList.add('selected')
+}
+function selectTrack(id,el){
+  const already = el.classList.contains('selected')
+  document.querySelectorAll('.track').forEach(t=>t.classList.remove('selected'))
+  if(!already) el.classList.add('selected')
+}
+function selectVoice(id,el){
+  document.querySelectorAll('.voice-card').forEach(v=>v.classList.remove('selected'))
+  el.classList.add('selected')
+  document.getElementById('voicePreviewBtn').disabled=false
+}
+
+function restartEditorCanvas(){
+  if(edRaf) cancelAnimationFrame(edRaf)
+  edRaf=null; edParticles=[]
+  setTimeout(startEditorCanvas, 50)
+}
+
+function toggleVoiceover(){
+  const btn=document.getElementById('voiceToggle')
+  const on=!btn.classList.contains('on')
+  btn.classList.toggle('on',on)
+  document.getElementById('voiceSection').classList.toggle('visible',on)
+  document.getElementById('voiceIcon').classList.toggle('on',on)
+}
+
+function updateSpeedLabel(val){
+  const labels={0.75:'Slow',1:'Normal',1.25:'Fast',1.5:'Very Fast'}
+  document.getElementById('speedLabel').textContent=labels[val]||'Normal'
+}
+
+async function previewVoiceover(){
+  const btn=document.getElementById('voicePreviewBtn')
+  btn.textContent='⏳ Generating...'
+  btn.disabled=true
+  await sleep(1500)
+  btn.textContent='▶ Preview Voiceover'
+  btn.disabled=false
+  showToast('Voiceover preview not available in demo.','info')
+}
+
+function saveDraft(){
+  showToast('Draft saved successfully!','success')
+}
+
+function exportAd(){
+  const canvas=document.getElementById('editorCanvas')
+  if(canvas){
+    try{
+      const a=document.createElement('a')
+      a.download=(edState.name||'ad').replace(/\s+/g,'-').toLowerCase()+'-ad.png'
+      a.href=canvas.toDataURL('image/png')
+      a.click()
+      showToast('Ad exported as PNG!','success')
+      return
+    }catch(e){}
+  }
+  openModal('Export Ad',`
+    <div style="text-align:center;padding:8px 0 16px">
+      <div style="font-size:40px;margin-bottom:16px">📅</div>
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:10px">Full Export in Production Version</h3>
+      <p style="color:var(--text-secondary);font-size:14px;line-height:1.6;margin-bottom:24px">
+        Export to MP4, GIF, and all major ad formats is available in the full version.
+        Schedule a demo to see it in action.
+      </p>
+      <button class="btn btn-primary" style="width:100%" onclick="closeModalDirect()">Got It</button>
+    </div>
+  `)
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GALLERY
+// ═══════════════════════════════════════════════════════════════
+let galleryCanvasRafs = []
+
+function filterGallery(format, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'))
+  btn.classList.add('active')
+  renderGallery(format)
+}
+
+function renderGallery(format) {
+  galleryCanvasRafs.forEach(r=>cancelAnimationFrame(r)); galleryCanvasRafs=[]
+  const grid=document.getElementById('galleryGrid')
+  grid.innerHTML=''
+  const ads = format==='all' ? MOCK_ADS : MOCK_ADS.filter(a=>a.format===format)
+  const badgeMap={landscape:'badge-cyan',vertical:'badge-amber',square:'badge-purple'}
+
+  ads.forEach((ad,i) => {
+    const dims=FORMAT_DIMS[ad.format]
+    const dw=Math.min(dims.dw,260), dh=Math.round(dw*(dims.dh/dims.dw))
+    const card=document.createElement('div')
+    card.className='gallery-card'
+    card.innerHTML=`
+      <div class="gallery-thumb">
+        <canvas id="gc-${ad.id}" width="${dims.iw}" height="${dims.ih}"
+          style="width:${dw}px;height:${dh}px;border-radius:8px;display:block"></canvas>
+        <div class="card-overlay">
+          <button class="btn btn-secondary btn-sm" onclick="previewGalleryAd('${ad.id}')">👁 Preview</button>
+          <button class="btn btn-primary btn-sm" onclick="editGalleryAd('${ad.id}')">✏ Edit</button>
+        </div>
+      </div>
+      <div class="gallery-foot">
+        <div class="gallery-foot-info">
+          <h3>${ad.name}</h3>
+          <p>${ad.date} · ${ad.dur}</p>
+        </div>
+        <span class="badge ${badgeMap[ad.format]||'badge-neutral'}" style="text-transform:capitalize">${ad.format}</span>
+      </div>`
+    grid.appendChild(card)
+
+    setTimeout(() => {
+      const canvas=document.getElementById('gc-'+ad.id)
+      if(!canvas) return
+      const ctx=canvas.getContext('2d')
+      ctx.scale(dims.iw/dw,dims.ih/dh)
+      const parts=makeParticles(dw,dh,40)
+      staticDraw(canvas,{name:ad.name,tagline:ad.tagline||ad.name,cta:'Learn More',logo:ad.logo,primary:ad.primary,secondary:ad.secondary,bg:ad.bg,bgStyle:'gradient',animated:false,particles:parts})
+    }, i*50)
+  })
+}
+
+function previewGalleryAd(id) {
+  const ad=MOCK_ADS.find(a=>a.id===id); if(!ad) return
+  const dims=FORMAT_DIMS[ad.format]
+  const dw=Math.min(dims.dw,480), dh=Math.round(dw*(dims.dh/dims.dw))
+  const badgeMap={landscape:'badge-cyan',vertical:'badge-amber',square:'badge-purple'}
+  openModal(ad.name,`
+    <div id="previewModalInner" style="display:flex;flex-direction:column;gap:12px">
+      <div style="background:rgba(0,0,0,0.3);border-radius:12px;padding:16px;display:flex;justify-content:center">
+        <canvas id="modalCanvas" width="${dims.iw}" height="${dims.ih}"
+          style="width:${dw}px;height:${dh}px;border-radius:10px;display:block"></canvas>
+      </div>
+      <div id="playerControls" class="player-controls">
+        <button onclick="toggleModalPlay()" id="modalPlayBtn" style="width:32px;height:32px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:13px;flex-shrink:0">⏸</button>
+        <div class="player-bar" onclick="seekPlayer(event,this)"><div class="player-fill" id="playerFill"></div></div>
+        <span class="player-time" id="playerTime">0:00 / ${ad.dur}</span>
+        <span style="font-size:13px;color:var(--text-muted)">🔊</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border)">
+        <div style="display:flex;gap:8px">
+          <span class="badge ${badgeMap[ad.format]||'badge-neutral'}" style="text-transform:capitalize">${ad.format}</span>
+          <span class="badge badge-neutral">${ad.dur}</span>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="closeModalDirect();editGalleryAd('${ad.id}')">✏ Edit Ad</button>
+      </div>
+    </div>`)
+
+  setTimeout(() => {
+    const canvas=document.getElementById('modalCanvas')
+    if(!canvas) return
+    const ctx=canvas.getContext('2d')
+    ctx.scale(dims.iw/dw,dims.ih/dh)
+    const parts=makeParticles(dw,dh)
+    let start=null, playing=true, elapsed=0, lastTs=null
+    const [minStr,secStr]=ad.dur.split(':')
+    const totalSecs=parseInt(minStr)*60+parseInt(secStr)
+    let progressSecs=0
+
+    window._modalRaf=null
+    function loop(ts){
+      if(!start) start=ts
+      drawAd(canvas,{name:ad.name,tagline:ad.tagline||ad.name,cta:'Watch Now',logo:ad.logo,primary:ad.primary,secondary:ad.secondary,bg:ad.bg,bgStyle:'particles',animated:playing,particles:parts},ts-start)
+      if(playing){
+        const dt=lastTs?ts-lastTs:0; lastTs=ts
+        progressSecs=Math.min(progressSecs+dt/1000,totalSecs)
+        const pct=progressSecs/totalSecs*100
+        const fill=document.getElementById('playerFill')
+        if(fill) fill.style.width=pct+'%'
+        const el=Math.floor(progressSecs)
+        const time=document.getElementById('playerTime')
+        if(time) time.textContent=`${Math.floor(el/60)}:${String(el%60).padStart(2,'0')} / ${ad.dur}`
+        if(progressSecs>=totalSecs){ playing=false; const pb=document.getElementById('modalPlayBtn'); if(pb) pb.textContent='▶' }
+      } else lastTs=null
+      window._modalRaf=requestAnimationFrame(loop)
+    }
+    window._modalRaf=requestAnimationFrame(loop)
+
+    window._toggleModalPlay=()=>{
+      playing=!playing
+      lastTs=null
+      if(progressSecs>=totalSecs){progressSecs=0;const fill=document.getElementById('playerFill');if(fill)fill.style.width='0%'}
+      const pb=document.getElementById('modalPlayBtn')
+      if(pb) pb.textContent=playing?'⏸':'▶'
+    }
+  }, 100)
+}
+
+function toggleModalPlay(){ if(window._toggleModalPlay) window._toggleModalPlay() }
+
+function editGalleryAd(id) {
+  const ad=MOCK_ADS.find(a=>a.id===id); if(!ad) return
+  const brandMatch = Object.values(BRANDS).find(b=>b.name===ad.name) || BRANDS.generic
+  currentBrand={...brandMatch,primary:ad.primary,secondary:ad.secondary,bg:ad.bg}
+  edState.name=ad.name; edState.tagline=ad.tagline||ad.name; edState.cta='Learn More'
+  edState.palette={id:'ad',name:ad.name,primary:ad.primary,secondary:ad.secondary,bg:ad.bg}
+  edParticles=[]
+  showPage('editor')
+  setTimeout(()=>{
+    document.getElementById('edName').value=edState.name
+    document.getElementById('edTagline').value=edState.tagline
+    document.getElementById('edCta').value=edState.cta
+    updateCount('edTagline','taglineCount',60)
+  },50)
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════════════════════
+function openModal(title,bodyHtml){
+  document.getElementById('modalTitle').textContent=title
+  document.getElementById('modalBody').innerHTML=bodyHtml
+  document.getElementById('modalBackdrop').classList.add('open')
+}
+function closeModal(e){
+  if(e.target===document.getElementById('modalBackdrop')) closeModalDirect()
+}
+function closeModalDirect(){
+  document.getElementById('modalBackdrop').classList.remove('open')
+  if(window._modalRaf){ cancelAnimationFrame(window._modalRaf); window._modalRaf=null }
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModalDirect() })
+
+// ═══════════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════════
+const TOAST_ICONS={success:'✅',error:'❌',info:'ℹ️',warning:'⚠️'}
+function showToast(msg,type='info'){
+  const c=document.getElementById('toastContainer')
+  const t=document.createElement('div')
+  t.className=`toast ${type}`
+  t.innerHTML=`<span class="toast-icon">${TOAST_ICONS[type]||'ℹ'}</span><span class="toast-msg">${msg}</span><button class="toast-close" onclick="this.parentElement.remove()">✕</button>`
+  c.appendChild(t)
+  requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('show')))
+  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),300) }, 3500)
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  renderShowcase()
+  initEditorPanels()
+  setTimeout(()=>{ if(document.getElementById('page-editor').classList.contains('active')) startEditorCanvas() }, 200)
+})
+</script>
+</body>
+</html>
